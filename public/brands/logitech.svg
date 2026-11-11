@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img" aria-label="Logitech">
+  <circle cx="56" cy="80" r="34" fill="none" stroke="#00b8fc" stroke-width="10"/>
+  <path d="M56 46v34h34" fill="none" stroke="#00b8fc" stroke-width="10" stroke-linecap="round"/>
+  <text x="198" y="94" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="700" letter-spacing="-2" fill="#f5f7fb">logitech</text>
+</svg>
