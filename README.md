@@ -1,11 +1,11 @@
 # D’Lu Store
 
-Catálogo web de productos tecnológicos para D’Lu Store. La aplicación permite explorar y filtrar productos, consultar sus detalles y acceder a un panel administrativo. Está construida con React, TypeScript y Vite, y puede conectarse a Supabase para leer el catálogo y autenticar usuarios.
+Catálogo web de productos tecnológicos para D’Lu Store. La aplicación permite explorar y filtrar productos, consultar sus detalles, gestionar un carrito y pagar online con Mercado Pago. Está construida con React, TypeScript y Vite, y puede conectarse a Supabase para leer el catálogo y registrar pedidos.
 
 ## Requisitos
 
 - Node.js y npm
-- Un proyecto de Supabase para habilitar la conexión y el acceso administrativo
+- Un proyecto de Supabase para habilitar la conexión y los pagos online
 
 ## Instalación
 
@@ -32,7 +32,7 @@ VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
 VITE_SUPABASE_ANON_KEY=tu-clave-publica
 ```
 
-La aplicación usa estas variables para conectar con Supabase. Si no están configuradas, muestra el catálogo de demostración incluido en el frontend; el acceso administrativo requiere una conexión configurada.
+La aplicación usa estas variables para conectar con Supabase. Si no están configuradas, muestra el catálogo de demostración incluido en el frontend.
 
 ### Aplicar las migraciones a Supabase
 
@@ -62,18 +62,18 @@ La CLI las ejecuta en orden por su prefijo de fecha:
 
 1. `20261024005300_create_dlu_catalog.sql`: crea las tablas del catálogo y sus políticas de seguridad.
 2. `20261024005419_seed_dlu_demo_catalog.sql`: agrega categorías, marcas y productos de demostración. Esta migración no reemplaza ni elimina datos existentes.
+3. `20261113000000_create_orders_and_payments.sql`: crea los pedidos y la aplicación de pagos de Mercado Pago.
+4. `20261113001000_remove_admin_access.sql`: elimina el historial administrativo y los permisos de escritura para clientes autenticados.
 
-La migración remota debe ejecutarse desde un entorno con la CLI instalada y acceso autorizado al proyecto. Las cuentas administrativas se crean y autentican mediante Supabase Auth. Las políticas actuales permiten que los usuarios autenticados gestionen productos; configura los usuarios y permisos de tu proyecto según las necesidades de despliegue. No uses una clave `service_role` en el frontend.
+La migración remota debe ejecutarse desde un entorno con la CLI instalada y acceso autorizado al proyecto. No uses una clave `service_role` en el frontend.
 
 ## Funcionalidades
 
 - Catálogo público con búsqueda por nombre, SKU o marca.
 - Filtro por categoría y vista de detalles de producto.
-- Acceso y registro de usuarios con Supabase Auth.
-- Panel con resumen del catálogo y descarga de productos en CSV.
+- Carrito de compras y pago online con Mercado Pago (tarjetas y Yape).
+- Página de resultado del pago con estados aprobado, pendiente y fallido.
 - Diseño adaptable a pantallas móviles y de escritorio.
-
-El panel también muestra módulos de importación, historial y usuarios que actualmente son espacios de interfaz preparados para futuras funcionalidades.
 
 ## Comandos
 
@@ -90,5 +90,5 @@ npm run typecheck  # Comprueba los tipos de TypeScript
 - React 18 y TypeScript
 - Vite
 - Tailwind CSS
-- Supabase (base de datos y autenticación)
+- Supabase (base de datos y Edge Functions)
 - Lucide React (iconos)
