@@ -31,5 +31,3 @@ export type Product = {
 };
 
 export type CartItem = { product: Product; quantity: number };
-
-export type DemoProduct = Product & { category: Category; brand: Brand };

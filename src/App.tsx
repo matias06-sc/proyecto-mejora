@@ -1,71 +1,18 @@
 import { useEffect, useState } from 'react';
-import { BrandDetailPage, BrandNotFoundPage } from '@/components/brands/BrandDetailPage';
-import { BrandsPage } from '@/components/brands/BrandsPage';
-import { HomePage } from '@/components/home/HomePage';
+import { PageContent } from '@/components/layout/PageContent';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { CartDrawer } from '@/components/store/CartDrawer';
-import { PaymentResultPage } from '@/components/store/PaymentResultPage';
-import { ProductDetailPage, ProductNotFoundPage } from '@/components/store/ProductDetailPage';
-import { StorePage } from '@/components/store/StorePage';
 import { fetchCatalog } from '@/lib/catalog';
-import { demoBrands, demoCategories, demoProducts } from '@/lib/demoData';
+import { readRecentlyViewed, saveRecentlyViewed } from '@/lib/recentProducts';
+import { pageFromHash, pageToHash } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
 import type { Brand, CartItem, Category, Page, Product } from '@/lib/types';
 
-const RECENT_KEY = 'dlu-recent-products';
-
-function pageFromHash(): Page {
-  const rawHash = window.location.hash.replace(/^#/, '');
-  const queryIndex = rawHash.indexOf('?');
-  const hashPath = queryIndex >= 0 ? rawHash.slice(0, queryIndex) : rawHash;
-  const hashParams = new URLSearchParams(queryIndex >= 0 ? rawHash.slice(queryIndex + 1) : '');
-  const searchParams = new URLSearchParams(window.location.search);
-  const getParam = (key: string) => hashParams.get(key) ?? searchParams.get(key);
-
-  if (hashPath === '/pago/resultado') {
-    const rawStatus = getParam('collection_status') ?? getParam('status') ?? 'unknown';
-    const status =
-      rawStatus === 'approved'
-        ? 'approved'
-        : rawStatus === 'pending' || rawStatus === 'in_process'
-          ? 'pending'
-          : rawStatus === 'rejected' || rawStatus === 'failure'
-            ? 'failure'
-            : 'unknown';
-    return {
-      name: 'payment',
-      status,
-      paymentId: getParam('payment_id') ?? undefined,
-      externalReference: getParam('external_reference') ?? undefined,
-    };
-  }
-  if (hashPath === '/tienda') return { name: 'store' };
-  const productMatch = hashPath.match(/^\/producto\/(.+)$/);
-  if (productMatch) return { name: 'product', productId: decodeURIComponent(productMatch[1]) };
-  if (hashPath === '/marcas') return { name: 'brands' };
-  const match = hashPath.match(/^\/marca\/(.+)$/);
-  if (match) return { name: 'brand', brandId: decodeURIComponent(match[1]) };
-  return { name: 'home' };
-}
-
-function readRecentlyViewed(): string[] {
-  try {
-    const raw = window.localStorage.getItem(RECENT_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed)
-      ? parsed.filter((id): id is string => typeof id === 'string').slice(0, 8)
-      : [];
-  } catch {
-    return [];
-  }
-}
-
 function App() {
-  const [products, setProducts] = useState<Product[]>(demoProducts);
-  const [categories, setCategories] = useState<Category[]>(demoCategories);
-  const [brands, setBrands] = useState<Brand[]>(demoBrands);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [page, setPage] = useState<Page>(() => pageFromHash());
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -97,11 +44,7 @@ function App() {
     if (page.name !== 'product') return;
     setRecentlyViewedIds((prev) => {
       const next = [page.productId, ...prev.filter((id) => id !== page.productId)].slice(0, 8);
-      try {
-        window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-      } catch {
-        /* storage unavailable */
-      }
+      saveRecentlyViewed(next);
       return next;
     });
   }, [page]);
@@ -120,18 +63,7 @@ function App() {
   }
 
   function navigate(next: Page) {
-    const hash =
-      next.name === 'home'
-        ? '#inicio'
-        : next.name === 'store'
-          ? '#/tienda'
-          : next.name === 'product'
-            ? `#/producto/${encodeURIComponent(next.productId)}`
-            : next.name === 'payment'
-              ? '#/pago/resultado'
-              : next.name === 'brands'
-                ? '#/marcas'
-                : `#/marca/${next.brandId}`;
+    const hash = pageToHash(next);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (window.location.hash === hash) setPage(next);
     else window.location.hash = hash;
@@ -258,61 +190,21 @@ function App() {
         }}
       />
 
-      {page.name === 'home' ? (
-        <HomePage
-          products={products}
-          categories={categories}
-          brands={brands}
-          onNavigateBrands={() => navigate({ name: 'brands' })}
-          onSelectBrand={(brand) => navigate({ name: 'brand', brandId: brand.id })}
-          onGoSection={goSection}
-          onSelectProduct={selectProduct}
-        />
-      ) : page.name === 'payment' ? (
-        <PaymentResultPage
-          status={page.status}
-          paymentId={page.paymentId}
-          externalReference={page.externalReference}
-          onBack={() => navigate({ name: 'store' })}
-        />
-      ) : page.name === 'store' ? (
-        <StorePage
-          products={products}
-          categories={categories}
-          brands={brands}
-          onSelectProduct={selectProduct}
-        />
-      ) : page.name === 'product' ? (
-        activeProduct ? (
-          <ProductDetailPage
-            key={activeProduct.id}
-            product={activeProduct}
-            relatedProducts={relatedProducts}
-            recentlyViewed={recentlyViewed}
-            onBack={() => navigate({ name: 'store' })}
-            onSelectProduct={selectProduct}
-            onAddToCart={addToCart}
-            onBuyNow={buyNow}
-          />
-        ) : (
-          <ProductNotFoundPage onBack={() => navigate({ name: 'store' })} />
-        )
-      ) : page.name === 'brands' ? (
-        <BrandsPage
-          brands={brands}
-          onSelectBrand={(brand) => navigate({ name: 'brand', brandId: brand.id })}
-          onGoCatalog={() => goSection('catalogo')}
-        />
-      ) : activeBrand ? (
-        <BrandDetailPage
-          brand={activeBrand}
-          products={products}
-          onBack={() => navigate({ name: 'brands' })}
-          onSelectProduct={selectProduct}
-        />
-      ) : (
-        <BrandNotFoundPage onBack={() => navigate({ name: 'brands' })} />
-      )}
+      <PageContent
+        page={page}
+        products={products}
+        categories={categories}
+        brands={brands}
+        activeBrand={activeBrand}
+        activeProduct={activeProduct}
+        relatedProducts={relatedProducts}
+        recentlyViewed={recentlyViewed}
+        onNavigate={navigate}
+        onGoSection={goSection}
+        onSelectProduct={selectProduct}
+        onAddToCart={addToCart}
+        onBuyNow={buyNow}
+      />
       <SiteFooter onGoBrands={() => navigate({ name: 'brands' })} />
 
       <CartDrawer
