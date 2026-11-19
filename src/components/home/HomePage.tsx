@@ -17,7 +17,15 @@ type HomePageProps = {
   onSelectProduct: (product: Product) => void;
 };
 
-export function HomePage({ products, categories, brands, onNavigateBrands, onSelectBrand, onGoSection, onSelectProduct }: HomePageProps) {
+export function HomePage({
+  products,
+  categories,
+  brands,
+  onNavigateBrands,
+  onSelectBrand,
+  onGoSection,
+  onSelectProduct,
+}: HomePageProps) {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
@@ -28,10 +36,27 @@ export function HomePage({ products, categories, brands, onNavigateBrands, onSel
 
   return (
     <main id="inicio">
-      <HeroSection productCount={products.length} brandCount={brands.length} onBuy={() => onGoSection('catalogo')} onViewBrands={onNavigateBrands} />
+      <HeroSection
+        productCount={products.length}
+        brandCount={brands.length}
+        onBuy={() => onGoSection('catalogo')}
+        onViewBrands={onNavigateBrands}
+      />
       <CategoryStrip categories={categories} onSelectCategory={selectCategory} />
       <FeaturedBrands brands={brands} onViewAll={onNavigateBrands} onSelectBrand={onSelectBrand} />
-      <CatalogSection products={products} categories={categories} search={search} categoryFilter={categoryFilter} onSearchChange={setSearch} onCategoryChange={setCategoryFilter} onClearFilters={() => { setSearch(''); setCategoryFilter('all'); }} onSelectProduct={onSelectProduct} />
+      <CatalogSection
+        products={products}
+        categories={categories}
+        search={search}
+        categoryFilter={categoryFilter}
+        onSearchChange={setSearch}
+        onCategoryChange={setCategoryFilter}
+        onClearFilters={() => {
+          setSearch('');
+          setCategoryFilter('all');
+        }}
+        onSelectProduct={onSelectProduct}
+      />
       <BenefitsStrip />
       <CompanySection />
     </main>

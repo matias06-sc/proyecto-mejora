@@ -15,9 +15,19 @@ export type Page =
   | { name: 'brand'; brandId: string };
 
 export type Product = {
-  id: string; sku: string; name: string; brand_id: string | null; category_id: string | null;
-  description: string | null; sale_price: number | null; stock: number; status: Status;
-  image_url: string | null; updated_at: string; category?: Category; brand?: Brand;
+  id: string;
+  sku: string;
+  name: string;
+  brand_id: string | null;
+  category_id: string | null;
+  description: string | null;
+  sale_price: number | null;
+  stock: number;
+  status: Status;
+  image_url: string | null;
+  updated_at: string;
+  category?: Category;
+  brand?: Brand;
 };
 
 export type CartItem = { product: Product; quantity: number };
