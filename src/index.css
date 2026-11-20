@@ -543,6 +543,9 @@ footer {
   gap: 16px;
 }
 .product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   overflow: hidden;
   border: 1px solid var(--line);
   background: var(--surface);
@@ -559,6 +562,7 @@ footer {
   box-shadow: 0 16px 34px rgba(11, 33, 64, 0.12);
 }
 .product-accent {
+  flex: none;
   height: 112px;
   padding: 17px 19px;
   background: linear-gradient(120deg, #081a33, #123a6b);
@@ -581,6 +585,9 @@ footer {
   transform: scale(1.12) translateY(-2px);
 }
 .product-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   padding: 18px;
 }
 .product-meta {
@@ -605,19 +612,30 @@ footer {
 }
 .product-info h3 {
   font-size: 21px;
+  line-height: 1.25;
   letter-spacing: -0.04em;
   margin: 12px 0 7px;
+  height: 53px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 .product-info p {
   font-size: 13px;
   color: var(--muted);
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .product-bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 22px;
+  margin-top: auto;
+  padding-top: 22px;
 }
 .product-bottom strong {
   font: 600 21px 'Plus Jakarta Sans';
@@ -1445,6 +1463,7 @@ footer p {
 .store-product-card {
   display: flex;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
   border: 1px solid var(--line);
   background: var(--surface);
@@ -1462,6 +1481,7 @@ footer p {
 }
 .store-product-media {
   position: relative;
+  flex: none;
   height: 196px;
   padding: 22px;
   display: grid;
@@ -1559,10 +1579,16 @@ footer p {
   line-height: 1.3;
   letter-spacing: -0.035em;
   margin: 0 0 12px;
-  min-height: 47px;
+  height: 52px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 .product-certificate {
   display: inline-flex;
+  max-width: 100%;
   align-items: center;
   gap: 7px;
   align-self: flex-start;
@@ -1578,12 +1604,18 @@ footer p {
 .product-certificate svg {
   flex: none;
 }
+.product-certificate span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .store-product-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: auto;
   padding-top: 14px;
   border-top: 1px solid var(--line);
 }

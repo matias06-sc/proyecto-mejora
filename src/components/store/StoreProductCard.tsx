@@ -29,7 +29,7 @@ export function StoreProductCard({ product, onClick }: StoreProductCardProps) {
             <span>D’Lu Store</span>
           )}
         </div>
-        <h3>{product.name}</h3>
+        <h3 title={product.name}>{product.name}</h3>
         <div className="product-certificate">
           <ShieldCheck size={14} />
           <span>Original · Garantía · Envío a Perú</span>

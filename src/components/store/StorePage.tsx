@@ -87,7 +87,6 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
       pointerId: event.pointerId,
       moved: false,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function moveBrandDrag(event: ReactPointerEvent<HTMLDivElement>) {
@@ -98,6 +97,7 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
     if (!drag.moved) {
       drag.moved = true;
       setBrandDragging(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
     }
     event.currentTarget.scrollLeft = drag.scrollLeft - distance;
   }
