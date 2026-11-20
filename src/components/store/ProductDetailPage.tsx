@@ -113,7 +113,7 @@ export function ProductDetailPage({
               <span>
                 Stock{' '}
                 <strong className={soldOut ? 'is-out' : ''}>
-                  {soldOut ? 'Agotado' : `${product.stock} unidades`}
+                  {soldOut ? 'SIN STOCK' : `${product.stock} unidades`}
                 </strong>
               </span>
             </div>

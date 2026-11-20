@@ -16,7 +16,9 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       <div className="product-info">
         <div className="product-meta">
           <span>{product.category?.name ?? 'Tecnología'}</span>
-          <span className="stock-dot">{product.stock > 0 ? 'Disponible' : 'Agotado'}</span>
+          <span className={`stock-dot ${product.stock > 0 ? '' : 'is-out'}`}>
+            {product.stock > 0 ? 'Disponible' : 'SIN STOCK'}
+          </span>
         </div>
         <h3>{product.name}</h3>
         <p>
