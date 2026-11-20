@@ -20,8 +20,8 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
             {product.stock > 0 ? 'Disponible' : 'SIN STOCK'}
           </span>
         </div>
-        <h3>{product.name}</h3>
-        <p>
+        <h3 title={product.name}>{product.name}</h3>
+        <p title={`${product.brand?.name ?? 'D’Lu Store'} · SKU ${product.sku}`}>
           {product.brand?.name ?? 'D’Lu Store'} · SKU {product.sku}
         </p>
         <div className="product-bottom">
