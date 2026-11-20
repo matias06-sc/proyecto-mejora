@@ -14,7 +14,7 @@ export function StoreProductCard({ product, onClick }: StoreProductCardProps) {
       <div className="store-product-media">
         <ProductImage product={product} />
         <span className={`store-stock ${product.stock > 0 ? '' : 'is-out'}`}>
-          {product.stock > 0 ? 'Disponible' : 'Agotado'}
+          {product.stock > 0 ? 'Disponible' : 'SIN STOCK'}
         </span>
       </div>
       <div className="store-product-body">
