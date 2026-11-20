@@ -3,6 +3,7 @@ import { PageContent } from '@/components/layout/PageContent';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { CartDrawer } from '@/components/store/CartDrawer';
+import { clearCart, readCart, saveCart } from '@/lib/cart';
 import { fetchCatalog } from '@/lib/catalog';
 import { readRecentlyViewed, saveRecentlyViewed } from '@/lib/recentProducts';
 import { pageFromHash, pageToHash } from '@/lib/router';
@@ -51,15 +52,35 @@ function App() {
 
   useEffect(() => {
     if (page.name === 'payment' && page.status === 'approved' && page.externalReference)
-      setCart([]);
+      emptyCart();
   }, [page]);
 
   async function loadCatalog() {
     const data = await fetchCatalog();
     if (!data) return;
-    if (data.products) setProducts(data.products);
+    if (data.products) {
+      setProducts(data.products);
+      setCart((prev) => {
+        if (prev.length) return prev;
+        return readCart().flatMap(({ productId, quantity }): CartItem[] => {
+          const product = data.products?.find((item) => item.id === productId);
+          if (!product || product.stock <= 0) return [];
+          return [{ product, quantity: Math.min(quantity, product.stock) }];
+        });
+      });
+    }
     if (data.categories?.length) setCategories(data.categories);
     if (data.brands?.length) setBrands(data.brands);
+  }
+
+  function commitCart(next: CartItem[]) {
+    setCart(next);
+    saveCart(next);
+  }
+
+  function emptyCart() {
+    setCart([]);
+    clearCart();
   }
 
   function navigate(next: Page) {
@@ -83,22 +104,23 @@ function App() {
 
   function addToCart(product: Product, quantity: number) {
     if (product.stock <= 0) return;
-    setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
+    const existing = cart.find((item) => item.product.id === product.id);
+    if (existing) {
+      commitCart(
+        cart.map((item) =>
           item.product.id === product.id
             ? { ...item, quantity: Math.min(item.quantity + quantity, Math.max(1, product.stock)) }
             : item,
-        );
-      }
-      return [...prev, { product, quantity: Math.min(quantity, Math.max(1, product.stock)) }];
-    });
+        ),
+      );
+      return;
+    }
+    commitCart([...cart, { product, quantity: Math.min(quantity, Math.max(1, product.stock)) }]);
   }
 
   function updateCartQuantity(productId: string, quantity: number) {
-    setCart((prev) =>
-      prev.map((item) =>
+    commitCart(
+      cart.map((item) =>
         item.product.id === productId
           ? { ...item, quantity: Math.max(1, Math.min(quantity, Math.max(1, item.product.stock))) }
           : item,
@@ -107,7 +129,7 @@ function App() {
   }
 
   function removeFromCart(productId: string) {
-    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+    commitCart(cart.filter((item) => item.product.id !== productId));
   }
 
   function buyNow(product: Product, quantity: number) {
@@ -215,7 +237,7 @@ function App() {
         onClose={() => setCartOpen(false)}
         onUpdateQuantity={updateCartQuantity}
         onRemove={removeFromCart}
-        onClear={() => setCart([])}
+        onClear={emptyCart}
         onCheckout={startCheckout}
       />
     </div>

@@ -1,5 +1,15 @@
-import { useMemo, useState } from 'react';
-import { ChevronDown, Filter, Package, Search, ShieldCheck, Truck } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Package,
+  Search,
+  ShieldCheck,
+  Truck,
+} from 'lucide-react';
 import { StoreProductCard } from '@/components/store/StoreProductCard';
 import { brandImageSrc } from '@/lib/brands';
 import type { Brand, Category, Product } from '@/lib/types';
@@ -15,7 +25,13 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [brandFilter, setBrandFilter] = useState('all');
-  const featuredBrands = brands.slice(0, 3);
+  const brandRowRef = useRef<HTMLDivElement>(null);
+  const brandDragRef = useRef<{ x: number; scrollLeft: number; pointerId: number; moved: boolean } | null>(
+    null,
+  );
+  const suppressBrandClickRef = useRef(false);
+  const [brandScroll, setBrandScroll] = useState({ left: false, right: false });
+  const [brandDragging, setBrandDragging] = useState(false);
 
   const filteredProducts = useMemo(
     () =>
@@ -35,6 +51,72 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
       }),
     [products, search, categoryFilter, brandFilter],
   );
+
+  useEffect(() => {
+    const row = brandRowRef.current;
+    if (!row) return;
+
+    function updateScrollState() {
+      if (!row) return;
+      setBrandScroll({
+        left: row.scrollLeft > 0,
+        right: row.scrollLeft + row.clientWidth < row.scrollWidth - 1,
+      });
+    }
+
+    updateScrollState();
+    row.addEventListener('scroll', updateScrollState, { passive: true });
+    window.addEventListener('resize', updateScrollState);
+    return () => {
+      row.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [brands.length]);
+
+  function scrollBrands(direction: -1 | 1) {
+    const row = brandRowRef.current;
+    if (!row) return;
+    row.scrollBy({ left: direction * row.clientWidth, behavior: 'smooth' });
+  }
+
+  function startBrandDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== 'mouse') return;
+    brandDragRef.current = {
+      x: event.clientX,
+      scrollLeft: event.currentTarget.scrollLeft,
+      pointerId: event.pointerId,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function moveBrandDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = brandDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const distance = event.clientX - drag.x;
+    if (!drag.moved && Math.abs(distance) < 4) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      setBrandDragging(true);
+    }
+    event.currentTarget.scrollLeft = drag.scrollLeft - distance;
+  }
+
+  function endBrandDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = brandDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (drag.moved) {
+      suppressBrandClickRef.current = true;
+      window.setTimeout(() => {
+        suppressBrandClickRef.current = false;
+      }, 0);
+    }
+    brandDragRef.current = null;
+    setBrandDragging(false);
+  }
 
   function clearFilters() {
     setSearch('');
@@ -108,10 +190,44 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
 
         <div className="store-brands">
           <div className="store-brands-head">
-            <div className="section-kicker">Marcas destacadas</div>
-            <span>Filtra por tu marca favorita</span>
+            <div>
+              <div className="section-kicker">Marcas destacadas</div>
+              <span>Filtra por tu marca favorita</span>
+            </div>
+            <div className="store-brand-nav">
+              <button
+                type="button"
+                aria-label="Ver marcas anteriores"
+                disabled={!brandScroll.left}
+                onClick={() => scrollBrands(-1)}
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                type="button"
+                aria-label="Ver más marcas"
+                disabled={!brandScroll.right}
+                onClick={() => scrollBrands(1)}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
-          <div className="store-brand-row">
+          <div
+            className={`store-brand-row ${brandDragging ? 'dragging' : ''}`}
+            ref={brandRowRef}
+            onPointerDown={startBrandDrag}
+            onPointerMove={moveBrandDrag}
+            onPointerUp={endBrandDrag}
+            onPointerCancel={endBrandDrag}
+            onClickCapture={(event) => {
+              if (suppressBrandClickRef.current) {
+                event.preventDefault();
+                event.stopPropagation();
+                suppressBrandClickRef.current = false;
+              }
+            }}
+          >
             <button
               className={`store-brand-chip ${brandFilter === 'all' ? 'active' : ''}`}
               onClick={() => setBrandFilter('all')}
@@ -119,7 +235,7 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
               <span className="store-brand-all">Todas</span>
               <small>Todas las marcas</small>
             </button>
-            {featuredBrands.map((brand) => (
+            {brands.map((brand) => (
               <button
                 key={brand.id}
                 className={`store-brand-chip ${brandFilter === brand.id ? 'active' : ''}`}
