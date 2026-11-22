@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  Package,
-  Search,
-  ShieldCheck,
-  Truck,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Package, ShieldCheck, Truck } from 'lucide-react';
+import { ProductPagination } from '@/components/products/ProductPagination';
+import { ProductToolbar } from '@/components/products/ProductToolbar';
 import { StoreProductCard } from '@/components/store/StoreProductCard';
 import { brandImageSrc } from '@/lib/brands';
+import { filterProducts } from '@/lib/catalogFilters';
+import type { SortOption } from '@/lib/catalogFilters';
+import { usePageSize } from '@/lib/usePageSize';
 import type { Brand, Category, Product } from '@/lib/types';
 
 type StorePageProps = {
@@ -25,6 +21,10 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [brandFilter, setBrandFilter] = useState('all');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [sort, setSort] = useState<SortOption>('default');
+  const [page, setPage] = useState(1);
   const brandRowRef = useRef<HTMLDivElement>(null);
   const brandDragRef = useRef<{ x: number; scrollLeft: number; pointerId: number; moved: boolean } | null>(
     null,
@@ -35,22 +35,28 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
 
   const filteredProducts = useMemo(
     () =>
-      products.filter((product) => {
-        const query = search.toLowerCase();
-        const matchesSearch =
-          !query ||
-          product.name.toLowerCase().includes(query) ||
-          product.sku.toLowerCase().includes(query) ||
-          (product.brand?.name ?? '').toLowerCase().includes(query);
-        const matchesCategory = categoryFilter === 'all' || product.category_id === categoryFilter;
-        const matchesBrand =
-          brandFilter === 'all' ||
-          product.brand_id === brandFilter ||
-          product.brand?.id === brandFilter;
-        return matchesSearch && matchesCategory && matchesBrand;
+      filterProducts(products, {
+        search,
+        categoryFilter,
+        brandFilter,
+        minPrice,
+        maxPrice,
+        sort,
       }),
-    [products, search, categoryFilter, brandFilter],
+    [products, search, categoryFilter, brandFilter, minPrice, maxPrice, sort],
   );
+
+  const pageSize = usePageSize(5);
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, categoryFilter, brandFilter, minPrice, maxPrice, sort]);
 
   useEffect(() => {
     const row = brandRowRef.current;
@@ -118,10 +124,22 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
     setBrandDragging(false);
   }
 
+  const hasActiveFilters =
+    search !== '' ||
+    categoryFilter !== 'all' ||
+    brandFilter !== 'all' ||
+    minPrice !== '' ||
+    maxPrice !== '' ||
+    sort !== 'default';
+
   function clearFilters() {
     setSearch('');
     setCategoryFilter('all');
     setBrandFilter('all');
+    setMinPrice('');
+    setMaxPrice('');
+    setSort('default');
+    setPage(1);
   }
 
   return (
@@ -160,31 +178,22 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
       </section>
 
       <section className="store-content">
-        <div className="store-toolbar">
-          <div className="search-box">
-            <Search size={18} />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por nombre, SKU o marca"
-            />
-          </div>
-          <div className="filter-box">
-            <Filter size={16} />
-            <select
-              value={categoryFilter}
-              onChange={(event) => setCategoryFilter(event.target.value)}
-            >
-              <option value="all">Todas las categorías</option>
-              {categories.map((category) => (
-                <option value={category.id} key={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={15} />
-          </div>
-        </div>
+        <ProductToolbar
+          className="store-toolbar"
+          search={search}
+          categoryFilter={categoryFilter}
+          categories={categories}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          sort={sort}
+          onSearchChange={setSearch}
+          onCategoryChange={setCategoryFilter}
+          onMinPriceChange={setMinPrice}
+          onMaxPriceChange={setMaxPrice}
+          onSortChange={setSort}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={clearFilters}
+        />
 
         <div className="store-divider" />
 
@@ -260,20 +269,36 @@ export function StorePage({ products, categories, brands, onSelectProduct }: Sto
         </div>
 
         {filteredProducts.length ? (
-          <div className="store-product-grid">
-            {filteredProducts.map((product) => (
-              <StoreProductCard
-                key={product.id}
-                product={product}
-                onClick={() => onSelectProduct(product)}
-              />
-            ))}
-          </div>
+          <>
+            <ProductPagination
+              page={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredProducts.length}
+              pageSize={pageSize}
+              onPageChange={setPage}
+            />
+            <div className="store-product-grid">
+              {paginatedProducts.map((product) => (
+                <StoreProductCard
+                  key={product.id}
+                  product={product}
+                  onClick={() => onSelectProduct(product)}
+                />
+              ))}
+            </div>
+            <ProductPagination
+              page={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredProducts.length}
+              pageSize={pageSize}
+              onPageChange={setPage}
+            />
+          </>
         ) : (
           <div className="empty-state">
             <Package size={29} />
             <h3>No encontramos productos</h3>
-            <p>Prueba con otra búsqueda, categoría o marca para continuar.</p>
+            <p>Prueba con otra búsqueda, categoría, marca o rango de precios.</p>
             <button className="outline-button" onClick={clearFilters}>
               Limpiar filtros
             </button>

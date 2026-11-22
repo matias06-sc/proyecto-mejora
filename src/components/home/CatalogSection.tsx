@@ -1,6 +1,11 @@
-import { useMemo } from 'react';
-import { ChevronDown, Filter, Package, Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Package } from 'lucide-react';
 import { ProductCard } from '@/components/products/ProductCard';
+import { ProductPagination } from '@/components/products/ProductPagination';
+import { ProductToolbar } from '@/components/products/ProductToolbar';
+import { filterProducts } from '@/lib/catalogFilters';
+import type { SortOption } from '@/lib/catalogFilters';
+import { usePageSize } from '@/lib/usePageSize';
 import type { Category, Product } from '@/lib/types';
 
 type CatalogSectionProps = {
@@ -8,8 +13,14 @@ type CatalogSectionProps = {
   categories: Category[];
   search: string;
   categoryFilter: string;
+  minPrice: string;
+  maxPrice: string;
+  sort: SortOption;
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
+  onMinPriceChange: (value: string) => void;
+  onMaxPriceChange: (value: string) => void;
+  onSortChange: (value: SortOption) => void;
   onClearFilters: () => void;
   onSelectProduct: (product: Product) => void;
 };
@@ -19,24 +30,48 @@ export function CatalogSection({
   categories,
   search,
   categoryFilter,
+  minPrice,
+  maxPrice,
+  sort,
   onSearchChange,
   onCategoryChange,
+  onMinPriceChange,
+  onMaxPriceChange,
+  onSortChange,
   onClearFilters,
   onSelectProduct,
 }: CatalogSectionProps) {
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, categoryFilter, minPrice, maxPrice, sort]);
+
   const filteredProducts = useMemo(
     () =>
-      products.filter((product) => {
-        const query = search.toLowerCase();
-        const matchesSearch =
-          !query ||
-          product.name.toLowerCase().includes(query) ||
-          product.sku.toLowerCase().includes(query) ||
-          (product.brand?.name ?? '').toLowerCase().includes(query);
-        const matchesCategory = categoryFilter === 'all' || product.category_id === categoryFilter;
-        return matchesSearch && matchesCategory;
+      filterProducts(products, {
+        search,
+        categoryFilter,
+        minPrice,
+        maxPrice,
+        sort,
       }),
-    [products, search, categoryFilter],
+    [products, search, categoryFilter, minPrice, maxPrice, sort],
+  );
+
+  const hasActiveFilters =
+    search !== '' ||
+    categoryFilter !== 'all' ||
+    minPrice !== '' ||
+    maxPrice !== '' ||
+    sort !== 'default';
+
+  const pageSize = usePageSize(3);
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
   );
 
   return (
@@ -52,43 +87,52 @@ export function CatalogSection({
           <span>resultados</span>
         </div>
       </div>
-      <div className="catalog-toolbar">
-        <div className="search-box">
-          <Search size={18} />
-          <input
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Buscar por nombre, SKU o marca"
-          />
-        </div>
-        <div className="filter-box">
-          <Filter size={16} />
-          <select value={categoryFilter} onChange={(event) => onCategoryChange(event.target.value)}>
-            <option value="all">Todas las categorías</option>
-            {categories.map((category) => (
-              <option value={category.id} key={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown size={15} />
-        </div>
-      </div>
+      <ProductToolbar
+        search={search}
+        categoryFilter={categoryFilter}
+        categories={categories}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        sort={sort}
+        onSearchChange={onSearchChange}
+        onCategoryChange={onCategoryChange}
+        onMinPriceChange={onMinPriceChange}
+        onMaxPriceChange={onMaxPriceChange}
+        onSortChange={onSortChange}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={onClearFilters}
+      />
       {filteredProducts.length ? (
-        <div className="product-grid">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onClick={() => onSelectProduct(product)}
-            />
-          ))}
-        </div>
+        <>
+          <ProductPagination
+            page={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredProducts.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
+          <div className="product-grid">
+            {paginatedProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onClick={() => onSelectProduct(product)}
+              />
+            ))}
+          </div>
+          <ProductPagination
+            page={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredProducts.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
+        </>
       ) : (
         <div className="empty-state">
           <Package size={29} />
           <h3>No encontramos productos</h3>
-          <p>Prueba con otra búsqueda o categoría para continuar.</p>
+          <p>Prueba con otra búsqueda, categoría o rango de precios.</p>
           <button className="outline-button" onClick={onClearFilters}>
             Limpiar filtros
           </button>
