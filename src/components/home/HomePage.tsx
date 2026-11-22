@@ -5,6 +5,7 @@ import { CategoryStrip } from '@/components/home/CategoryStrip';
 import { CompanySection } from '@/components/home/CompanySection';
 import { FeaturedBrands } from '@/components/home/FeaturedBrands';
 import { HeroSection } from '@/components/home/HeroSection';
+import type { SortOption } from '@/lib/catalogFilters';
 import type { Brand, Category, Product } from '@/lib/types';
 
 type HomePageProps = {
@@ -28,6 +29,9 @@ export function HomePage({
 }: HomePageProps) {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [sort, setSort] = useState<SortOption>('default');
 
   function selectCategory(categoryId: string) {
     setCategoryFilter(categoryId);
@@ -49,11 +53,20 @@ export function HomePage({
         categories={categories}
         search={search}
         categoryFilter={categoryFilter}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        sort={sort}
         onSearchChange={setSearch}
         onCategoryChange={setCategoryFilter}
+        onMinPriceChange={setMinPrice}
+        onMaxPriceChange={setMaxPrice}
+        onSortChange={setSort}
         onClearFilters={() => {
           setSearch('');
           setCategoryFilter('all');
+          setMinPrice('');
+          setMaxPrice('');
+          setSort('default');
         }}
         onSelectProduct={onSelectProduct}
       />
