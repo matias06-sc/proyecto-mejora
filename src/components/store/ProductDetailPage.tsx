@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { ProductImage } from '@/components/products/ProductImage';
 import { StoreProductCard } from '@/components/store/StoreProductCard';
+import { assetUrl } from '@/lib/assets';
 import { brandImageSrc } from '@/lib/brands';
 import type { Product } from '@/lib/types';
 
@@ -38,8 +39,16 @@ export function ProductDetailPage({
 }: ProductDetailPageProps) {
   const [quantity, setQuantity] = useState(1);
   const [feedback, setFeedback] = useState('');
+  const [selectedImage, setSelectedImage] = useState(0);
   const soldOut = product.stock <= 0;
   const maxQuantity = Math.max(1, product.stock);
+  const galleryImages = [product.image_url, ...(product.image_urls ?? [])]
+    .map(assetUrl)
+    .filter((url): url is string => Boolean(url));
+
+  useEffect(() => {
+    setSelectedImage(0);
+  }, [product.id]);
 
   useEffect(() => {
     if (!feedback) return;
@@ -65,7 +74,34 @@ export function ProductDetailPage({
         <section className="product-detail-grid">
           <div className="product-detail-visual">
             <div className="product-detail-media">
-              <ProductImage product={product} />
+              {galleryImages[selectedImage] ? (
+                <img
+                  className="product-image"
+                  src={galleryImages[selectedImage]}
+                  alt={product.name}
+                />
+              ) : (
+                <ProductImage product={product} />
+              )}
+            </div>
+            <div className="product-detail-thumbnails">
+              {Array.from({ length: 4 }, (_, index) => {
+                const src = galleryImages[index];
+                return src ? (
+                  <button
+                    key={src}
+                    className={`product-detail-thumb ${index === selectedImage ? 'is-active' : ''}`}
+                    onClick={() => setSelectedImage(index)}
+                    aria-label={`Ver imagen ${index + 1} de ${product.name}`}
+                  >
+                    <img src={src} alt="" loading="lazy" />
+                  </button>
+                ) : (
+                  <div className="product-detail-thumb is-empty" key={`empty-${index}`}>
+                    <Plus size={18} />
+                  </div>
+                );
+              })}
             </div>
             {product.brand && (
               <div className="product-detail-brand">
