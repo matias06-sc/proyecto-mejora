@@ -1568,7 +1568,7 @@ footer p {
 }
 .store-product-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 16px;
 }
 .store-product-card {
@@ -1593,12 +1593,11 @@ footer p {
 .store-product-media {
   position: relative;
   flex: none;
-  height: 196px;
-  padding: 22px;
+  height: 216px;
   display: grid;
   place-items: center;
-  background: linear-gradient(120deg, #081a33, #123a6b);
-  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 22px 22px 0 0;
   overflow: hidden;
 }
 .product-image {
@@ -1611,6 +1610,15 @@ footer p {
     transform 0.45s cubic-bezier(0.2, 0.75, 0.25, 1),
     filter 0.3s ease;
 }
+.store-product-media .product-image,
+.cart-item-media .product-image {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  border-radius: inherit;
+}
 .product-image-placeholder {
   position: relative;
   display: flex;
@@ -1622,6 +1630,11 @@ footer p {
   height: 100%;
   color: var(--beige);
   transition: transform 0.45s cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+.store-product-media .product-image-placeholder,
+.cart-item-media .product-image-placeholder {
+  background: linear-gradient(120deg, #081a33, #123a6b);
+  border-radius: inherit;
 }
 .product-image-placeholder strong {
   font: 700 clamp(53px, 7.7vw, 79px) / 0.9 'Plus Jakarta Sans';
@@ -1758,8 +1771,8 @@ footer p {
 }
 .product-detail-media {
   position: relative;
-  min-height: 400px;
-  padding: 42px;
+  min-height: 480px;
+  padding: 34px;
   display: grid;
   place-items: center;
   border: 1px solid var(--line);
@@ -1770,7 +1783,7 @@ footer p {
   overflow: hidden;
 }
 .product-detail-media .product-image {
-  max-height: 340px;
+  max-height: 420px;
 }
 .product-detail-media .product-image-placeholder strong {
   font-size: clamp(99px, 13.2vw, 154px);
@@ -2054,13 +2067,11 @@ footer p {
   width: 64px;
   height: 64px;
   flex: none;
-  padding: 8px;
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: linear-gradient(120deg, #081a33, #123a6b);
+  border-radius: 14px;
+  background: var(--surface);
 }
 .cart-item-media .product-image-placeholder strong {
   font-size: 29px;
@@ -2608,8 +2619,8 @@ footer {
     position: static;
   }
   .product-detail-media {
-    min-height: 300px;
-    padding: 30px;
+    min-height: 360px;
+    padding: 28px;
   }
 }
 
