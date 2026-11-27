@@ -1,4 +1,4 @@
-import { assetUrl } from '@/lib/assets';
+import { productGallery } from '@/lib/assets';
 import type { Product } from '@/lib/types';
 
 type ProductImageProps = {
@@ -6,7 +6,7 @@ type ProductImageProps = {
 };
 
 export function ProductImage({ product }: ProductImageProps) {
-  const imageSrc = assetUrl(product.image_url);
+  const imageSrc = productGallery(product)[0] ?? null;
   if (imageSrc)
     return <img className="product-image" src={imageSrc} alt={product.name} loading="lazy" />;
   return (
