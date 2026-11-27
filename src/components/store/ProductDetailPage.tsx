@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { ProductImage } from '@/components/products/ProductImage';
 import { StoreProductCard } from '@/components/store/StoreProductCard';
-import { assetUrl } from '@/lib/assets';
+import { productGallery } from '@/lib/assets';
 import { brandImageSrc } from '@/lib/brands';
 import type { Product } from '@/lib/types';
 
@@ -42,9 +42,7 @@ export function ProductDetailPage({
   const [selectedImage, setSelectedImage] = useState(0);
   const soldOut = product.stock <= 0;
   const maxQuantity = Math.max(1, product.stock);
-  const galleryImages = [product.image_url, ...(product.image_urls ?? [])]
-    .map(assetUrl)
-    .filter((url): url is string => Boolean(url));
+  const galleryImages = productGallery(product);
 
   useEffect(() => {
     setSelectedImage(0);

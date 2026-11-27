@@ -25,7 +25,10 @@ export type Product = {
   stock: number;
   status: Status;
   image_url: string | null;
-  image_urls?: string[] | null;
+  image_urls?: string[] | string | null;
+  image_url_2?: string | null;
+  image_url_3?: string | null;
+  image_url_4?: string | null;
   updated_at: string;
   category?: Category;
   brand?: Brand;
