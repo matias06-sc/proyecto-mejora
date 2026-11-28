@@ -1,5 +1,5 @@
 # D’Lu Store
-
+HOLA SOY ERICK GARCIA NOA
 Catálogo web de productos tecnológicos para D’Lu Store. La aplicación permite explorar y filtrar productos, consultar sus detalles, gestionar un carrito y pagar online con Mercado Pago. Está construida con React, TypeScript y Vite, y puede conectarse a Supabase para leer el catálogo y registrar pedidos.
 
 ## Requisitos
